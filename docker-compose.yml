@@ -10,7 +10,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  whoami:
-    image: containous/whoami
+  ghost:
+    image: ghost:alpine
     labels:
-      - "traefik.http.routers.whomai.rule=HOST(`tetra-nova.space`)"
+      - "traefik.http.routers.ghost.rule=HOST(`tetra-nova.space`)"
