@@ -4,13 +4,32 @@ services:
     command:
       - "--api.insecure=true"
       - "--providers.docker"
+      - "--providers.docker.exposedbydefaul=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "80:80"
+      - "443:443"
       - "8080:8080"
     volumes:
+      - letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
 
   whoami:
     image: containous/whoami
+    #deploy:
+      #mode: replicated
+      #replicas: 3
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.whomai.rule=HOST(`tetra-nova.space`)"
+      - "traefik.http.routers.whoami.entrypoint=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+
+volumes:
+  #db-data:
+  lets-encrypt:
+
+#secrets:
+#  db-password:
+#    file: db/password.txt
