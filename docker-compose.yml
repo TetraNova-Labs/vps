@@ -41,7 +41,7 @@ services:
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
 
 volumes:
-  lets-encrypt:
+  letsencrypt:
   #db-data:
 
 #secrets:
