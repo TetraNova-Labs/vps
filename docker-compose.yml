@@ -1,3 +1,4 @@
+
 services:
   reverse-proxy:
     image: traefik:v3.1
@@ -12,7 +13,7 @@ services:
       - "443:443"
       - "8080:8080"
     volumes:
-      - letsencrypt:/letsencrypt
+      - lets-encrypt:/lets-encrypt
       - /var/run/docker.sock:/var/run/docker.sock
 
   whoami:
@@ -27,8 +28,8 @@ services:
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
 
 volumes:
-  #db-data:
   lets-encrypt:
+  #db-data:
 
 #secrets:
 #  db-password:
