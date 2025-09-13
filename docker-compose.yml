@@ -62,17 +62,16 @@ services:
       - "traefik.http.middlewares.client-headers.headers.stsPreload=true"
       - "traefik.http.routers.client.middlewares=client-headers"
 
-      # www -> apex redirect
-      - "traefik.http.middlewares.to-apex.redirectregex.regex=^https?://www\.tetra-nova\.space(.*)"
-      - "traefik.http.middlewares.to-apex.redirectregex.replacement=https://tetra-nova.space$1"
-      - "traefik.http.middlewares.to-apex.redirectregex.permanent=true"
-      - "traefik.http.routers.client-www.rule=Host(`www.tetra-nova.space`)"
-      - "traefik.http.routers.client-www.entrypoints=websecure"
-      - "traefik.http.routers.client-www.tls.certresolver=myresolver"
-      - "traefik.http.routers.client-www.middlewares=to-apex"
+      # www → apex redirect (note the single quotes so \. is not an escape)
+      - 'traefik.http.middlewares.to-apex.redirectregex.regex=^https?://www\.tetra-nova\.space(.*)'
+      - 'traefik.http.middlewares.to-apex.redirectregex.replacement=https://tetra-nova.space$1'
+      - 'traefik.http.middlewares.to-apex.redirectregex.permanent=true'
+      - 'traefik.http.routers.client-www.rule=Host(`www.tetra-nova.space`)'
+      - 'traefik.http.routers.client-www.entrypoints=websecure'
+      - 'traefik.http.routers.client-www.tls.certresolver=myresolver'
+      - 'traefik.http.routers.client-www.middlewares=to-apex'
 
-      # Let Watchtower update this service
-      - "com.centurylinklabs.watchtower.enable=true"
+      - 'com.centurylinklabs.watchtower.enable=true'
     restart: unless-stopped
 
 volumes:
