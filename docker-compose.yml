@@ -1,6 +1,5 @@
-
 services:
-  watchtower: #to watch service for new containers add label `com.centurylinklabs.watchtower.enable=true`
+  watchtower:
     image: containrrr/watchtower
     command:
       - "--label-enable"
@@ -9,38 +8,72 @@ services:
       - "--rolling-restart"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
 
   reverse-proxy:
     image: traefik:v3.1
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--entryPoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.email=albertmirek@tetra-nova.space"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+
+      # Entry points
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+
+      # ACME (choose ONE option below; TLS-ALPN by default)
+      - "--certificatesresolvers.myresolver.acme.email=albertmirek@tetra-nova.space"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+
+      # If you are behind Cloudflare "orange cloud" (proxied), comment the tlschallenge line above
+      # and use DNS challenge instead (also add CF_DNS_API_TOKEN env var):
+      # - --certificatesresolvers.myresolver.acme.dnschallenge=true
+      # - --certificatesresolvers.myresolver.acme.dnschallenge.provider=cloudflare
+
+      # Optional: dashboard (protect behind auth if you enable it)
+      # - --api.dashboard=true
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
 
   client:
     image: ghcr.io/tetranova-labs/sober-october-client:prod
     labels:
       - "traefik.enable=true"
+
+      # Serve client at apex (default domain)
       - "traefik.http.routers.client.rule=Host(`tetra-nova.space`)"
       - "traefik.http.routers.client.entrypoints=websecure"
       - "traefik.http.routers.client.tls.certresolver=myresolver"
+
+      # Be explicit about the container port your client listens on.
+      # If your image serves with nginx on 80, leave as 80; adjust if it's 3000/4173/etc.
+      - "traefik.http.services.client.loadbalancer.server.port=80"
+
+      # Security headers (optional)
+      - "traefik.http.middlewares.client-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.client-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.client-headers.headers.stsPreload=true"
+      - "traefik.http.routers.client.middlewares=client-headers"
+
+      # www -> apex redirect
+      - "traefik.http.middlewares.to-apex.redirectregex.regex=^https?://www\.tetra-nova\.space(.*)"
+      - "traefik.http.middlewares.to-apex.redirectregex.replacement=https://tetra-nova.space$1"
+      - "traefik.http.middlewares.to-apex.redirectregex.permanent=true"
+      - "traefik.http.routers.client-www.rule=Host(`www.tetra-nova.space`)"
+      - "traefik.http.routers.client-www.entrypoints=websecure"
+      - "traefik.http.routers.client-www.tls.certresolver=myresolver"
+      - "traefik.http.routers.client-www.middlewares=to-apex"
+
+      # Let Watchtower update this service
       - "com.centurylinklabs.watchtower.enable=true"
+    restart: unless-stopped
+
 volumes:
   letsencrypt:
-  #db-data:
-
-#secrets:
-#  db-password:
-#    file: db/password.txt
