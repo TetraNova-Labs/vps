@@ -29,14 +29,14 @@ services:
       - letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
 
-  whoami:
-    image: traefik/whoami
+  client:
+    image: ghcr.io/tetranova-labs/sober-october-client:prod
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`whoami.tetra-nova.space`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
-
+      - "traefik.http.routers.client.rule=Host(`tetra-nova.space`)"
+      - "traefik.http.routers.client.entrypoints=websecure"
+      - "traefik.http.routers.client.tls.certresolver=myresolver"
+      - "com.centurylinklabs.watchtower.enable=true"
 volumes:
   letsencrypt:
   #db-data:
